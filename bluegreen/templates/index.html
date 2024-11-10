@@ -1,0 +1,19 @@
+{% extends "base_file.html" %}
+{% block content %}
+<table border="1">
+    <thead>
+        <tr>
+            <th>Number of Passengers In</th>
+            <th>Number of Passengers Out</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for row in shuttle_data %}
+        <tr>
+            <td>{{ row.date }}</td>
+            <td>{{ row.time }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
