@@ -1,7 +1,7 @@
 {% extends 'base_file.html' %}
 
 {% block content %}
-<div class="container mx-auto p-8">
+<div class="container mx-auto p-4 sm:p-6 lg:p-8">
     <!-- Header -->
     <h1 class="text-3xl font-bold text-center text-blue-600 mb-6">
         Total Passengers Entered at Each Stop ({{ current_year }})
@@ -9,7 +9,7 @@
 
     <!-- Chart Container -->
     <div class="bg-white shadow-lg rounded-lg p-6">
-        <canvas id="stopSpecificChart"></canvas>
+        <canvas id="stopSpecificChart" class="w-full h-72 sm:h-96 lg:h-[400px]"></canvas>
     </div>
 </div>
 
@@ -77,6 +77,8 @@
                     },
                     ticks: {
                         color: '#6B7280', // Gray ticks
+                        maxRotation: 0,
+                        autoSkip: true, // Automatically skip some ticks for readability
                     },
                     grid: {
                         display: false
@@ -106,24 +108,24 @@
 </script>
 
 
-<div class="container mx-auto p-8">
+<div class="container mx-auto p-4 sm:p-6 lg:p-8">
     <!-- Header -->
     <h1 class="text-3xl font-bold text-center text-blue-600 mb-6">
         Passenger Travel Pattern
     </h1>
 
     <!-- Chart Row -->
-    <div class="flex flex-row justify-between gap-4">
+    <div class="flex flex-col sm:flex-row sm:gap-4 justify-between gap-4">
         <!-- Boarding Chart -->
-        <div class="bg-white shadow-lg rounded-lg p-6 flex-1">
+        <div class="bg-white shadow-lg rounded-lg p-6 flex-1 mb-4 sm:mb-0">
             <h2 class="text-xl font-semibold text-center text-blue-500 mb-4">Boarding Passengers</h2>
-            <canvas id="boardingChart"></canvas>
+            <canvas id="boardingChart" class="w-full h-72 sm:h-96 lg:h-[400px]"></canvas>
         </div>
 
         <!-- Alighting Chart -->
-        <div class="bg-white shadow-lg rounded-lg p-6 flex-1">
+        <div class="bg-white shadow-lg rounded-lg p-6 flex-1 mb-4 sm:mb-0">
             <h2 class="text-xl font-semibold text-center text-blue-500 mb-4">Alighting Passengers</h2>
-            <canvas id="alightingChart"></canvas>
+            <canvas id="alightingChart" class="w-full h-72 sm:h-96 lg:h-[400px]"></canvas>
         </div>
     </div>
 </div>
@@ -220,76 +222,5 @@
     });
 </script>
 
-<body>
-    <h1>Hourly Boarding and Alighting Data</h1>
-
-    <div>
-        <canvas id="travelPatternChart" width="800" height="400"></canvas>
-    </div>
-
-    <script>
-        // Get data from Django context
-        const hours = {{ hours | safe }};
-        const boardingCounts = {{ boarding_counts | safe }};
-        const alightingCounts = {{ alighting_counts | safe }};
-
-        // Prepare datasets for the chart
-        const datasets = Object.keys(boardingCounts).map(stop => ({
-            label: stop,
-            data: boardingCounts[stop], // Data for passengers boarding
-            backgroundColor: 'rgba(75, 192, 192, 0.2)',
-            borderColor: 'rgba(75, 192, 192, 1)',
-            borderWidth: 1,
-            fill: false,
-            type: 'line',
-            pointRadius: 3,
-        })).concat(Object.keys(alightingCounts).map(stop => ({
-            label: stop + " (Alighting)",
-            data: alightingCounts[stop], // Data for passengers alighting
-            backgroundColor: 'rgba(255, 99, 132, 0.2)',
-            borderColor: 'rgba(255, 99, 132, 1)',
-            borderWidth: 1,
-            fill: false,
-            type: 'line',
-            pointRadius: 3,
-        })));
-
-        // Chart.js configuration
-        const ctx = document.getElementById('travelPatternChart').getContext('2d');
-        const travelPatternChart = new Chart(ctx, {
-            type: 'line', // Line chart
-            data: {
-                labels: hours, // Labels for the x-axis (6 AM to 10 PM)
-                datasets: datasets,
-            },
-            options: {
-                responsive: true,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Number of Passengers'
-                        }
-                    },
-                    x: {
-                        title: {
-                            display: true,
-                            text: 'Hour of the Day'
-                        }
-                    }
-                },
-                elements: {
-                    line: {
-                        tension: 0.2
-                    },
-                    point: {
-                        radius: 3
-                    }
-                },
-            }
-        });
-    </script>
-</body>
 
 {% endblock %}
