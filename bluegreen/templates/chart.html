@@ -1,0 +1,99 @@
+{% extends 'base_file.html' %}
+{% block content %}
+<div class="container mx-auto p-8">
+    <!-- Header -->
+    <h1 class="text-3xl font-bold text-center text-blue-600 mb-6">
+        Total Passengers Entered into Shuttle ({{ current_year }})
+    </h1>
+
+    <!-- Chart Container -->
+    <div class="bg-white shadow-lg rounded-lg p-6">
+        <canvas id="monthlyPassengersChart"></canvas>
+    </div>
+</div>
+
+<script>
+    // Data from Django context
+    const months = {{ months | safe }}; // List of month names
+    const passengersPerMonth = {{ passengers_per_month | safe }}; // Monthly passengers data
+
+    // Create the chart
+    const ctx = document.getElementById('monthlyPassengersChart').getContext('2d');
+    const monthlyPassengersChart = new Chart(ctx, {
+        type: 'line', // Line chart
+        data: {
+            labels: months, // Months as labels
+            datasets: [{
+                label: 'Number of Passengers Entered',
+                data: passengersPerMonth, // Monthly data
+                borderColor: '#2563EB', // Primary blue color for the line
+                backgroundColor: 'rgba(37, 99, 235, 0.2)', // Light blue for fill
+                borderWidth: 3,
+                pointBackgroundColor: '#2563EB', // Point color
+                tension: 0.4 // Smooth the line
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                    labels: {
+                        color: '#374151', // Gray text for the legend
+                        font: {
+                            size: 14
+                        }
+                    }
+                },
+                tooltip: {
+                    enabled: true,
+                    callbacks: {
+                        label: function(context) {
+                            return `${context.raw} passengers`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Months',
+                        color: '#374151',
+                        font: {
+                            size: 16,
+                            weight: 'bold'
+                        }
+                    },
+                    ticks: {
+                        color: '#6B7280', // Gray ticks
+                    },
+                    grid: {
+                        display: false
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Total Passengers',
+                        color: '#374151',
+                        font: {
+                            size: 16,
+                            weight: 'bold'
+                        }
+                    },
+                    ticks: {
+                        color: '#6B7280',
+                    },
+                    grid: {
+                        color: '#E5E7EB', // Light gray grid lines
+                    },
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

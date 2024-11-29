@@ -1,19 +1,295 @@
-{% extends "base_file.html" %}
+{% extends 'base_file.html' %}
+
 {% block content %}
-<table border="1">
-    <thead>
-        <tr>
-            <th>Number of Passengers In</th>
-            <th>Number of Passengers Out</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for row in shuttle_data %}
-        <tr>
-            <td>{{ row.date }}</td>
-            <td>{{ row.time }}</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+<div class="container mx-auto p-8">
+    <!-- Header -->
+    <h1 class="text-3xl font-bold text-center text-blue-600 mb-6">
+        Total Passengers Entered at Each Stop ({{ current_year }})
+    </h1>
+
+    <!-- Chart Container -->
+    <div class="bg-white shadow-lg rounded-lg p-6">
+        <canvas id="stopSpecificChart"></canvas>
+    </div>
+</div>
+
+<script>
+    // Data from Django context
+    const stops = {{ stop_names | safe }}; // List of stop names
+    const passengersIn = {{ passengers_in | safe }}; // Passengers entered data for each stop
+    const passengersOut = {{ passengers_out | safe }}; // Passengers exited data for each stop
+
+    // Create the chart
+    const ctx = document.getElementById('stopSpecificChart').getContext('2d');
+    const stopSpecificChart = new Chart(ctx, {
+        type: 'bar', // Bar chart to represent each stop's data
+        data: {
+            labels: stops, // Stops as labels
+            datasets: [{
+                label: 'Number of Passengers Entered',
+                data: passengersIn, // Passenger data for each stop
+                backgroundColor: '#3B82F6', // Blue color for bars
+                borderColor: '#2563EB', // Darker blue for border
+                borderWidth: 1,
+                hoverBackgroundColor: '#2563EB', // Hover effect on bar
+            }, {
+                label: 'Number of Passengers Exited',
+                data: passengersOut, // Passenger exit data for each stop
+                backgroundColor: '#6B7280', // Gray color for bars
+                borderColor: '#4B5563', // Darker gray for border
+                borderWidth: 1,
+                hoverBackgroundColor: '#4B5563', // Hover effect on exit bars
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                    labels: {
+                        color: '#374151', // Gray text for the legend
+                        font: {
+                            size: 14
+                        }
+                    }
+                },
+                tooltip: {
+                    enabled: true,
+                    callbacks: {
+                        label: function(context) {
+                            return `${context.raw} passengers`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Stops',
+                        color: '#374151',
+                        font: {
+                            size: 16,
+                            weight: 'bold'
+                        }
+                    },
+                    ticks: {
+                        color: '#6B7280', // Gray ticks
+                    },
+                    grid: {
+                        display: false
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Total Passengers',
+                        color: '#374151',
+                        font: {
+                            size: 16,
+                            weight: 'bold'
+                        }
+                    },
+                    ticks: {
+                        color: '#6B7280',
+                    },
+                    grid: {
+                        color: '#E5E7EB', // Light gray grid lines
+                    },
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+</script>
+
+
+<div class="container mx-auto p-8">
+    <!-- Header -->
+    <h1 class="text-3xl font-bold text-center text-blue-600 mb-6">
+        Passenger Travel Pattern
+    </h1>
+
+    <!-- Chart Row -->
+    <div class="flex flex-row justify-between gap-4">
+        <!-- Boarding Chart -->
+        <div class="bg-white shadow-lg rounded-lg p-6 flex-1">
+            <h2 class="text-xl font-semibold text-center text-blue-500 mb-4">Boarding Passengers</h2>
+            <canvas id="boardingChart"></canvas>
+        </div>
+
+        <!-- Alighting Chart -->
+        <div class="bg-white shadow-lg rounded-lg p-6 flex-1">
+            <h2 class="text-xl font-semibold text-center text-blue-500 mb-4">Alighting Passengers</h2>
+            <canvas id="alightingChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Data for boarding passengers
+    const boardingCtx = document.getElementById('boardingChart').getContext('2d');
+    const boardingChart = new Chart(boardingCtx, {
+        type: 'doughnut',
+        data: {
+            labels: {{ stops | safe }},
+            datasets: [{
+                label: 'Boarding Passengers',
+                data: {{ boarding_counts | safe }},
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.6)',
+                    'rgba(54, 162, 235, 0.6)',
+                    'rgba(255, 206, 86, 0.6)',
+                    'rgba(75, 192, 192, 0.6)',
+                    'rgba(153, 102, 255, 0.6)',
+                    'rgba(255, 159, 64, 0.6)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: {
+                        color: '#374151',
+                        font: {
+                            size: 14
+                        }
+                    }
+                },
+                title: {
+                    display: true,
+                    text: 'Boarding Demands by Stop',
+                    color: '#374151',
+                    font: {
+                        size: 16,
+                        weight: 'bold'
+                    }
+                }
+            }
+        }
+    });
+
+    // Data for alighting passengers
+    const alightingCtx = document.getElementById('alightingChart').getContext('2d');
+    const alightingChart = new Chart(alightingCtx, {
+        type: 'doughnut',
+        data: {
+            labels: {{ stops | safe }},
+            datasets: [{
+                label: 'Alighting Passengers',
+                data: {{ alighting_counts | safe }},
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.6)',
+                    'rgba(54, 162, 235, 0.6)',
+                    'rgba(255, 206, 86, 0.6)',
+                    'rgba(75, 192, 192, 0.6)',
+                    'rgba(153, 102, 255, 0.6)',
+                    'rgba(255, 159, 64, 0.6)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: {
+                        color: '#374151',
+                        font: {
+                            size: 14
+                        }
+                    }
+                },
+                title: {
+                    display: true,
+                    text: 'Alighting Demands by Stop',
+                    color: '#374151',
+                    font: {
+                        size: 16,
+                        weight: 'bold'
+                    }
+                }
+            }
+        }
+    });
+</script>
+
+<body>
+    <h1>Hourly Boarding and Alighting Data</h1>
+
+    <div>
+        <canvas id="travelPatternChart" width="800" height="400"></canvas>
+    </div>
+
+    <script>
+        // Get data from Django context
+        const hours = {{ hours | safe }};
+        const boardingCounts = {{ boarding_counts | safe }};
+        const alightingCounts = {{ alighting_counts | safe }};
+
+        // Prepare datasets for the chart
+        const datasets = Object.keys(boardingCounts).map(stop => ({
+            label: stop,
+            data: boardingCounts[stop], // Data for passengers boarding
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            borderColor: 'rgba(75, 192, 192, 1)',
+            borderWidth: 1,
+            fill: false,
+            type: 'line',
+            pointRadius: 3,
+        })).concat(Object.keys(alightingCounts).map(stop => ({
+            label: stop + " (Alighting)",
+            data: alightingCounts[stop], // Data for passengers alighting
+            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+            borderColor: 'rgba(255, 99, 132, 1)',
+            borderWidth: 1,
+            fill: false,
+            type: 'line',
+            pointRadius: 3,
+        })));
+
+        // Chart.js configuration
+        const ctx = document.getElementById('travelPatternChart').getContext('2d');
+        const travelPatternChart = new Chart(ctx, {
+            type: 'line', // Line chart
+            data: {
+                labels: hours, // Labels for the x-axis (6 AM to 10 PM)
+                datasets: datasets,
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Number of Passengers'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Hour of the Day'
+                        }
+                    }
+                },
+                elements: {
+                    line: {
+                        tension: 0.2
+                    },
+                    point: {
+                        radius: 3
+                    }
+                },
+            }
+        });
+    </script>
+</body>
+
 {% endblock %}

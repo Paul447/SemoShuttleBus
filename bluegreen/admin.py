@@ -24,8 +24,8 @@ class ShuttleAdmin(admin.ModelAdmin):
 @admin.register(BlueShuttle)
 class BlueShuttleAdmin(admin.ModelAdmin):
     list_display = ('stop_name', 'number_of_passangers_in', 'number_of_passangers_out', 'date', 'time', 'shuttle_driver', 'shuttle_detail','occupancy_detail')
-    search_fields = ( 'number_of_passangers_in', 'number_of_passangers_out',)
-    list_filter = ( 'number_of_passangers_in', 'number_of_passangers_out',)
+    search_fields = ( 'date',)
+    list_filter = ( 'date','stop_name',)
     fieldsets = (
         ('Basic Information', {
             'fields': ('blue_name_display', 'number_of_passangers_in','time', 'number_of_passangers_out','blue_occupancy_display', 'blue_available_seats_display')
