@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from .models import BlueShuttle
 from django.db.models import Sum
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta, date, time
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.http import HttpResponseForbidden
@@ -23,14 +23,16 @@ def demands_by_hour(request):
     if not request.user.is_superuser:
         return HttpResponseForbidden("You do not have permission to view this page.")
     
-    # Calculate the date for 1 year ago
     one_year_ago = datetime.now() - timedelta(days=365)
 
-    # Filter data for the last year between 6:00 AM and 10:00 PM
+# Define the start and end times for each day (6:00 AM to 10:00 PM)
+    start_time = time(6, 0)  # 6:00 AM
+    end_time = time(22, 0)  # 10:00 PM
+
+# Filter data based on the datetime range and time range
     filtered_data = BlueShuttle.objects.filter(
-        time__gte=one_year_ago,
-        time__hour__gte=6,  # Starting from 6:00 AM
-        time__hour__lt=22  # Up to 10:00 PM
+    date__gte=one_year_ago.date(),  # Filter by date from one year ago
+    time__range=(start_time, end_time)  # Filter by time range
     )
 
     # Aggregate data by hour and stop for boarding and alighting
@@ -99,6 +101,7 @@ def demands_by_hour(request):
     }
 
     return render(request, 'demands_by_hour.html', context)
+
 
 
 # Function to get data for the last 7 days
@@ -315,3 +318,22 @@ def index(request):
     }
 
     return render(request, 'index.html', context)
+
+
+
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from .form import BlueShuttleForm
+
+@login_required
+def blue_shuttle_form(request):
+    if request.method == 'POST':
+        form = BlueShuttleForm(request.POST)
+        if form.is_valid():
+            # Handle the form submission
+            form.save()
+            return redirect('success_url')  # Redirect to a success page after saving
+    else:
+        form = BlueShuttleForm()
+
+    return render(request, 'blue_shuttle_form.html', {'form': form})
