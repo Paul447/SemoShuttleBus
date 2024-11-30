@@ -1,10 +1,11 @@
-from django.shortcuts import render
+from django.shortcuts import render,redirect
 from .models import BlueShuttle
 from django.db.models import Sum
 from datetime import datetime, timedelta, date, time
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.http import HttpResponseForbidden
+from .form import BlueShuttleForm
 
 # List of stops in a specific order
 stops = [
@@ -318,22 +319,3 @@ def index(request):
     }
 
     return render(request, 'index.html', context)
-
-
-
-from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required
-from .form import BlueShuttleForm
-
-@login_required
-def blue_shuttle_form(request):
-    if request.method == 'POST':
-        form = BlueShuttleForm(request.POST)
-        if form.is_valid():
-            # Handle the form submission
-            form.save()
-            return redirect('success_url')  # Redirect to a success page after saving
-    else:
-        form = BlueShuttleForm()
-
-    return render(request, 'blue_shuttle_form.html', {'form': form})

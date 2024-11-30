@@ -1,7 +1,8 @@
 from django.contrib import admin
-from .models import Shuttle , GreenShuttle ,    BlueShuttle, ShuttleStopIndex , greenShuttleStopIndex , LastStopGreenOccupancy, LastStopBlueOccupancy
+from .models import Shuttle , GreenShuttle , BlueShuttle, ShuttleStopIndex , greenShuttleStopIndex , LastStopGreenOccupancy, LastStopBlueOccupancy
 from django.contrib.auth.models import User
 import datetime
+from django import forms
 from django.contrib import messages
 import pdb
 
@@ -21,14 +22,59 @@ class ShuttleAdmin(admin.ModelAdmin):
         }),
     )
 
+class BlueShuttleForm(forms.ModelForm):
+    class Meta:
+        model = BlueShuttle
+        fields = '__all__'
+
+    number_choices = [(i, str(i)) for i in range(26)]  # Options from 0 to 25
+
+    number_of_passangers_in = forms.TypedChoiceField(
+        choices=number_choices,
+        coerce=lambda x: int(x) if x.isdigit() else x,  # Convert digit input to int
+        widget=forms.Select(attrs={
+            'class': 'form-control w-full p-3 border border-gray-300 rounded-lg'
+        }),
+        label="Number of Passengers In",
+        required=True,
+    )
+
+    number_of_passangers_out = forms.TypedChoiceField(
+        choices=number_choices ,
+        coerce=lambda x: int(x) if x.isdigit() else x,  # Convert digit input to int
+        widget=forms.Select(attrs={
+            'class': 'form-control w-full p-3 border border-gray-300 rounded-lg'
+        }),
+        label="Number of Passengers Out",
+        required=True,
+    )
+
+    # Adding manual input for "Other" option
+    def clean_number_of_passangers_in(self):
+        data = self.cleaned_data['number_of_passangers_in']
+        if data == 'other':
+            data = self.data.get('manual_number_in', None)
+            if not data.isdigit():
+                raise forms.ValidationError("Please provide a valid number for passengers boarding.")
+        return int(data)
+
+    def clean_number_of_passangers_out(self):
+        data = self.cleaned_data['number_of_passangers_out']
+        if data == 'other':
+            data = self.data.get('manual_number_out', None)
+            if not data.isdigit():
+                raise forms.ValidationError("Please provide a valid number for passengers departing.")
+        return int(data)
+
 @admin.register(BlueShuttle)
 class BlueShuttleAdmin(admin.ModelAdmin):
+    form = BlueShuttleForm
     list_display = ('stop_name', 'number_of_passangers_in', 'number_of_passangers_out', 'date', 'time', 'shuttle_driver', 'shuttle_detail','occupancy_detail')
     search_fields = ( 'date',)
     list_filter = ( 'date','stop_name')
     fieldsets = (
         ('Basic Information', {
-            'fields': ('blue_name_display', 'number_of_passangers_in','time', 'number_of_passangers_out','blue_occupancy_display', 'blue_available_seats_display')
+            'fields': ('blue_name_display', 'number_of_passangers_in', 'number_of_passangers_out','blue_occupancy_display', 'blue_available_seats_display')
         }),
     )
     readonly_fields = ('blue_name_display','blue_occupancy_display','blue_available_seats_display' )
@@ -139,11 +185,56 @@ class LastStopBlueOccupancyAdmin(admin.ModelAdmin):
         stop_occupancy.blue_occupancy = 0
         stop_occupancy.save()
         self.message_user(request, "Occupancy reset to 0 successfully.", messages.SUCCESS)
-        
 
 
+
+  
+class Greenshuttleform(forms.ModelForm):
+    class Meta:
+        model = GreenShuttle
+        fields = '__all__'
+
+    number_choices = [(i, str(i)) for i in range(26)]  # Options from 0 to 25
+
+    number_of_passangers_in = forms.TypedChoiceField(
+        choices=number_choices,
+        coerce=lambda x: int(x) if x.isdigit() else x,  # Convert digit input to int
+        widget=forms.Select(attrs={
+            'class': 'form-control w-full p-3 border border-gray-300 rounded-lg'
+        }),
+        label="Number of Passengers In",
+        required=True,
+    )
+
+    number_of_passangers_out = forms.TypedChoiceField(
+        choices=number_choices ,
+        coerce=lambda x: int(x) if x.isdigit() else x,  # Convert digit input to int
+        widget=forms.Select(attrs={
+            'class': 'form-control w-full p-3 border border-gray-300 rounded-lg'
+        }),
+        label="Number of Passengers Out",
+        required=True,
+    )
+
+    # Adding manual input for "Other" option
+    def clean_number_of_passangers_in(self):
+        data = self.cleaned_data['number_of_passangers_in']
+        if data == 'other':
+            data = self.data.get('manual_number_in', None)
+            if not data.isdigit():
+                raise forms.ValidationError("Please provide a valid number for passengers boarding.")
+        return int(data)
+
+    def clean_number_of_passangers_out(self):
+        data = self.cleaned_data['number_of_passangers_out']
+        if data == 'other':
+            data = self.data.get('manual_number_out', None)
+            if not data.isdigit():
+                raise forms.ValidationError("Please provide a valid number for passengers departing.")
+        return int(data)      
 @admin.register(GreenShuttle)
 class GreenShuttleAdmin(admin.ModelAdmin):
+    form =  Greenshuttleform
     list_display = ( 'stop_name','number_of_passangers_in','number_of_passangers_out','date','time','shuttle_driver','shuttle_detail')
     search_fields = (  'number_of_passangers_in','number_of_passangers_out',)
     list_filter = ('number_of_passangers_in','number_of_passangers_out',)

@@ -63,7 +63,7 @@ class BlueShuttle(models.Model):
     number_of_passangers_in = models.PositiveIntegerField(default=0)
     number_of_passangers_out = models.PositiveIntegerField( default=0)
     date = models.DateField(null=True , blank=True,auto_now_add=True)  
-    time = models.TimeField(null=True )
+    time = models.TimeField(null=True ,blank=True, auto_now_add=True)
     occupancy_detail = models.IntegerField(default=0)
     shuttle_driver = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True,)
     shuttle_detail = models.ForeignKey(Shuttle, on_delete=models.CASCADE)

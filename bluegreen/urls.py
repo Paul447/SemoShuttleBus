@@ -9,5 +9,5 @@ urlpatterns = [
     path('filtered-data/', views.filtered_shuttle_data_view, name='filtered_shuttle_data'),
     path('demands_by_stop/', views.demands_by_stop, name='demands_by_stop'),
     path('demands_by_hour/', views.demands_by_hour, name='demands_by_hour'),
-    path('blue-shuttle-form/', views.blue_shuttle_form, name='blue_shuttle_form'),
+    
 ]
