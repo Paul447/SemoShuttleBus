@@ -32,9 +32,6 @@ class BlueShuttleForm(forms.ModelForm):
     number_of_passangers_in = forms.TypedChoiceField(
         choices=number_choices,
         coerce=lambda x: int(x) if x.isdigit() else x,  # Convert digit input to int
-        widget=forms.Select(attrs={
-            'class': 'form-control w-full p-3 border border-gray-300 rounded-lg'
-        }),
         label="Number of Passengers In",
         required=True,
     )
@@ -42,9 +39,6 @@ class BlueShuttleForm(forms.ModelForm):
     number_of_passangers_out = forms.TypedChoiceField(
         choices=number_choices ,
         coerce=lambda x: int(x) if x.isdigit() else x,  # Convert digit input to int
-        widget=forms.Select(attrs={
-            'class': 'form-control w-full p-3 border border-gray-300 rounded-lg'
-        }),
         label="Number of Passengers Out",
         required=True,
     )
@@ -74,7 +68,7 @@ class BlueShuttleAdmin(admin.ModelAdmin):
     list_filter = ( 'date','stop_name')
     fieldsets = (
         ('Basic Information', {
-            'fields': ('blue_name_display', 'number_of_passangers_in', 'number_of_passangers_out','blue_occupancy_display', 'blue_available_seats_display')
+            'fields': ('blue_name_display',  'number_of_passangers_out','number_of_passangers_in','blue_occupancy_display', 'blue_available_seats_display')
         }),
     )
     readonly_fields = ('blue_name_display','blue_occupancy_display','blue_available_seats_display' )
@@ -199,9 +193,7 @@ class Greenshuttleform(forms.ModelForm):
     number_of_passangers_in = forms.TypedChoiceField(
         choices=number_choices,
         coerce=lambda x: int(x) if x.isdigit() else x,  # Convert digit input to int
-        widget=forms.Select(attrs={
-            'class': 'form-control w-full p-3 border border-gray-300 rounded-lg'
-        }),
+   
         label="Number of Passengers In",
         required=True,
     )
@@ -209,9 +201,6 @@ class Greenshuttleform(forms.ModelForm):
     number_of_passangers_out = forms.TypedChoiceField(
         choices=number_choices ,
         coerce=lambda x: int(x) if x.isdigit() else x,  # Convert digit input to int
-        widget=forms.Select(attrs={
-            'class': 'form-control w-full p-3 border border-gray-300 rounded-lg'
-        }),
         label="Number of Passengers Out",
         required=True,
     )
@@ -240,7 +229,7 @@ class GreenShuttleAdmin(admin.ModelAdmin):
     list_filter = ('number_of_passangers_in','number_of_passangers_out',)
     fieldsets = (
         ('Basic Information', {
-            'fields': ('stop_name_display', 'number_of_passangers_in','number_of_passangers_out', 'green_occupancy_display', 'green_available_seats_display')
+            'fields': ('stop_name_display','number_of_passangers_out', 'number_of_passangers_in', 'green_occupancy_display', 'green_available_seats_display')
         }),
     )
 
