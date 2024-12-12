@@ -5,11 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Shuttle Data{% endblock %}</title>
-    <!-- Add Tailwind CSS (CDN for simplicity or use your own compiled version) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/aspect-ratio"></script>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
 </head>
@@ -24,46 +21,59 @@
                 <a href="{% url 'index' %}" class="text-2xl font-bold text-white">
                     SEMO Shuttle Data
                 </a>
-                <!-- Navigation Links -->
-                <div class="hidden md:flex space-x-6">
-                    <a href="{% url 'index' %}" class="text-white hover:text-gray-200 font-medium">
-                        Home
-                    </a>
-                    <a href="{% url 'shuttle_data' %}" class="text-white hover:text-gray-200 font-medium">
-                        Shuttle Data
-                    </a>
-                    <a href="{% url 'demands_by_hour' %}" class="text-white hover:text-gray-200 font-medium">
-                        Demands by Hour
-                    </a>
-                    <a href="{% url 'last_7_days_data' %}" class="text-white hover:text-gray-200 font-medium">
-                        Last 7 Days
-                    </a>
-                    <a href="{% url 'filtered_shuttle_data' %}" class="text-white hover:text-gray-200 font-medium">
-                        Filter Data
-                    </a>
-                  
 
+                <!-- Navigation Links -->
+                <div class="hidden md:flex items-center space-x-6">
+                    <!-- Blue Links Dropdown -->
+                    <div class="relative">
+                        <button class="text-white font-medium focus:outline-none" id="blue-dropdown-btn">
+                            Blue Data
+                        </button>
+                        <div id="blue-dropdown" class="absolute left-0 hidden bg-white text-gray-800 shadow-lg rounded mt-2 py-2 w-56 space-y-2">
+                            <a href="{% url 'index' %}" class="block px-4 py-2 hover:bg-blue-100">Home</a>
+                            <a href="{% url 'shuttle_data' %}" class="block px-4 py-2 hover:bg-blue-100">Yearly</a>
+                            <a href="{% url 'demands_by_hour' %}" class="block px-4 py-2 hover:bg-blue-100">Hourly</a>
+                            <a href="{% url 'last_7_days_data' %}" class="block px-4 py-2 hover:bg-blue-100">Weekly</a>
+                            <a href="{% url 'filtered_shuttle_data' %}" class="block px-4 py-2 hover:bg-blue-100">Filter</a>
+                            <a href="{% url 'shuttle_round' %}" class="block px-4 py-2 hover:bg-blue-100">Round Average</a>
+
+                        </div>
+                    </div>
+
+                    <!-- Green Links Dropdown -->
+                    <div class="relative">
+                        <button class="text-white font-medium focus:outline-none" id="green-dropdown-btn">
+                            Green Data
+                        </button>
+                        <div id="green-dropdown" class="absolute left-0 hidden bg-white text-gray-800 shadow-lg rounded mt-2 py-2 w-56 space-y-2">
+                            <a href="{% url 'green_index' %}" class="block px-4 py-2 hover:bg-blue-100">Home</a>
+                            <a href="{% url 'green_year_data' %}" class="block px-4 py-2 hover:bg-blue-100">Yearly</a>
+                            <a href="{% url 'green_hour_data' %}" class="block px-4 py-2 hover:bg-blue-100">Hourly</a>
+                            <a href="{% url 'green_last_7_days_data' %}" class="block px-4 py-2 hover:bg-blue-100">Weekly</a>
+                            <a href="{% url 'green_filtered_shuttle_data' %}" class="block px-4 py-2 hover:bg-blue-100">Filter</a>
+                        </div>
+                    </div>
                 </div>
+
                 <!-- Mobile Menu Button -->
-                <div class="md:hidden">
-                    <button id="menu-btn" class="text-white focus:outline-none">
-                        ☰
-                    </button>
-                </div>
+                <button id="menu-btn" class="md:hidden text-white text-2xl focus:outline-none">
+                    ☰
+                </button>
             </div>
 
             <!-- Mobile Dropdown Menu -->
             <div id="menu" class="hidden md:hidden bg-blue-600">
-                <a href="{% url 'shuttle_data' %}" class="block py-2 px-4 text-white hover:bg-blue-700">
-                    Shuttle Data
-                </a>
-                <a href="{% url 'last_7_days_data' %}" class="block py-2 px-4 text-white hover:bg-blue-700">
-                    Last 7 Days
-                </a>
-                <a href="{% url 'filtered_shuttle_data' %}" class="block py-2 px-4 text-white hover:bg-blue-700">
-                    Filter Data
-                </a>
-
+                <a href="{% url 'index' %}" class="block py-2 px-4 text-white hover:bg-blue-700">B-Home</a>
+                <a href="{% url 'shuttle_data' %}" class="block py-2 px-4 text-white hover:bg-blue-700">B-Yearly</a>
+                <a href="{% url 'demands_by_hour' %}" class="block py-2 px-4 text-white hover:bg-blue-700">B-Hourly</a>
+                <a href="{% url 'last_7_days_data' %}" class="block py-2 px-4 text-white hover:bg-blue-700">B-Weekly</a>
+                <a href="{% url 'filtered_shuttle_data' %}" class="block py-2 px-4 text-white hover:bg-blue-700">B-Filter</a>
+                <hr class="border-gray-400">
+                <a href="{% url 'green_index' %}" class="block py-2 px-4 text-white hover:bg-blue-700">G-Home</a>
+                <a href="{% url 'green_year_data' %}" class="block py-2 px-4 text-white hover:bg-blue-700">G-Yearly</a>
+                <a href="{% url 'green_hour_data' %}" class="block py-2 px-4 text-white hover:bg-blue-700">G-Hourly</a>
+                <a href="{% url 'green_last_7_days_data' %}" class="block py-2 px-4 text-white hover:bg-blue-700">G-Weekly</a>
+                <a href="{% url 'green_filtered_shuttle_data' %}" class="block py-2 px-4 text-white hover:bg-blue-700">G-Filter</a>
             </div>
         </nav>
     </header>
@@ -83,8 +93,23 @@
         </p>
     </footer>
 
-    <!-- Script for Mobile Menu -->
+    <!-- Script for Click-based Dropdown and Mobile Menu -->
     <script>
+        // Toggle Blue Data dropdown
+        const blueDropdownBtn = document.getElementById('blue-dropdown-btn');
+        const blueDropdown = document.getElementById('blue-dropdown');
+        blueDropdownBtn.addEventListener('click', () => {
+            blueDropdown.classList.toggle('hidden');
+        });
+
+        // Toggle Green Data dropdown
+        const greenDropdownBtn = document.getElementById('green-dropdown-btn');
+        const greenDropdown = document.getElementById('green-dropdown');
+        greenDropdownBtn.addEventListener('click', () => {
+            greenDropdown.classList.toggle('hidden');
+        });
+
+        // Toggle Mobile Menu
         const menuBtn = document.getElementById('menu-btn');
         const menu = document.getElementById('menu');
         menuBtn.addEventListener('click', () => {

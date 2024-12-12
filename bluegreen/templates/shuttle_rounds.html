@@ -1,0 +1,20 @@
+
+{% extends 'base_file.html' %}
+{% block content %}
+
+
+    <h1>Shuttle Round Analysis</h1>
+    <p>Average Time Taken for One Round: <strong>{{ average_time }}</strong></p>
+
+    <canvas id="roundsChart" width="800" height="400"></canvas>
+
+    {{tower_stops}}
+    {%for tower in tower_stops%}
+        <p>
+            {{tower.time}}
+        </p>
+    {%endfor%}
+
+{% endblock %}
+
+

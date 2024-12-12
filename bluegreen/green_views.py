@@ -1,19 +1,30 @@
 from django.shortcuts import render
-from .models import BlueShuttle
+from .models import GreenShuttle
 from django.db.models import Sum
 from datetime import datetime, timedelta, date, time
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.http import HttpResponseForbidden
-import pdb
 
-
+# Create your views here.
 # List of stops in a specific order
 stops = [
-    "Towers", "Grauel", "UC/Kent/Academic", "Vandiver/Merick", "Rear Kent", "Pacific/Grauel",
-    "Catapult", "Mass Media", "Spanish/Independence", "River Campus", "Band Annex",
-    "River Campus Arts Building", "Vandiver/Merick", "Bookstore", "Memorial/Parker/Academic",
-    "Scully/Parker", "Dempster", "Polytech/Laferla", "MMTF", "International Village"
+    "Towers",
+    "Grauel",
+    "Houck/Alumni",
+    "Vandiver/Merick",
+    "UC/Kent/Academic",
+    "Rear Kent",
+    "Pacific",
+    "Grauel",
+    "Rear of Academic",
+    "Memorial",
+    "Scully/Parker",
+    "Dempster",
+    "LaFerla/Polytech",
+    "MMTF",
+    "DPS/Greek Village",
+    "International Village" 
 ]
 
 # Mapping stops to indices for sorting
@@ -21,7 +32,7 @@ stop_index_map = {stop: index for index, stop in enumerate(stops)}
 
 # Function to get demands by hour
 @login_required
-def demands_by_hour(request):
+def demands_by_hour_green(request):
     if not request.user.is_superuser:
         return HttpResponseForbidden("You do not have permission to view this page.")
     
@@ -32,7 +43,7 @@ def demands_by_hour(request):
     end_time = time(22, 0)  # 10:00 PM
 
 # Filter data based on the datetime range and time range
-    filtered_data = BlueShuttle.objects.filter(
+    filtered_data = GreenShuttle.objects.filter(
     date__gte=one_year_ago.date(),  # Filter by date from one year ago
     time__range=(start_time, end_time)  # Filter by time range
     )
@@ -105,10 +116,131 @@ def demands_by_hour(request):
     return render(request, 'demands_by_hour.html', context)
 
 
-
-# Function to get data for the last 7 days
 @login_required
-def last_7_days_data_view(request):
+def demands_by_stop(request):
+    if not request.user.is_superuser:
+        return HttpResponseForbidden("You do not have permission to view this page.")
+    
+    # Aggregate boarding and alighting data by stop
+    stop_data = GreenShuttle.objects.values('stop_name').annotate(
+        total_boarding=Sum('number_of_passangers_in'),
+        total_alighting=Sum('number_of_passangers_out')
+    ).order_by('stop_name')
+
+    # Prepare data for visualization
+    stops = [data['stop_name'] for data in stop_data]
+    boarding_counts = [data['total_boarding'] for data in stop_data]
+    alighting_counts = [data['total_alighting'] for data in stop_data]
+
+    # Render the demands by stop data to the template
+    return stops, boarding_counts, alighting_counts
+
+@login_required
+def index(request):
+    # Check if the user is a superuser before proceeding
+    if not request.user.is_superuser:
+        return HttpResponseForbidden("You do not have permission to view this page.")
+
+    # Get the current year
+    current_year = date.today().year
+
+    # Call the demands_by_stop function to get the required data
+    stops, boarding_counts, alighting_counts = demands_by_stop(request)
+    
+    # List of stop names in the correct order
+    stop_order = [
+    "Towers",
+    "Grauel",
+    "Houck/Alumni",
+    "Vandiver/Merick",
+    "UC/Kent/Academic",
+    "Rear Kent",
+    "Pacific",
+    "Grauel",
+    "Rear of Academic",
+    "Memorial",
+    "Scully/Parker",
+    "Dempster",
+    "LaFerla/Polytech",
+    "MMTF",
+    "DPS/Greek Village",
+    "International Village" 
+    ]
+ 
+    
+    # Aggregate the total number of passengers by stop for the current year
+    stop_data = GreenShuttle.objects.filter(date__year=current_year) \
+        .values('stop_name') \
+        .annotate(
+            total_passengers_in=Sum('number_of_passangers_in'),
+            total_passengers_out=Sum('number_of_passangers_out')
+        ) \
+        .order_by('stop_name')
+
+    # Create dictionaries for easy lookup
+    stop_dict = {data['stop_name']: data for data in stop_data}
+
+    # Prepare arrays to hold stop names and corresponding data
+    stop_names = []
+    passengers_in = []
+    passengers_out = []
+
+    # Ensure stops are added in the correct order
+    for stop in stop_order:
+        if stop in stop_dict:
+            stop_names.append(stop)
+            passengers_in.append(stop_dict[stop]['total_passengers_in'] or 0)
+            passengers_out.append(stop_dict[stop]['total_passengers_out'] or 0)
+
+    # Prepare the context to pass to the template
+    context = {
+        'stop_names': stop_names,
+        'passengers_in': passengers_in,
+        'passengers_out': passengers_out,
+        'current_year': current_year,
+        'stops': stops,
+        'boarding_counts': boarding_counts,
+        'alighting_counts': alighting_counts
+    }
+    return render(request, 'index.html', context)
+@login_required
+def greenyeardata(request):
+    if not request.user.is_superuser:
+        return HttpResponseForbidden("You do not have permission to view this page.")
+    
+    # Get the current year and month
+    current_year = date.today().year
+    current_month = date.today().month
+
+    # Aggregate monthly data for the current year
+    monthly_data = GreenShuttle.objects.filter(date__year=current_year).values('date__month').annotate(
+        total_passengers_in=Sum('number_of_passangers_in')
+    ).order_by('date__month')
+
+    # Prepare the months and corresponding passenger data
+    months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+    passengers_per_month = [0] * 12
+
+    # Populate data for the months that have entries
+    for data in monthly_data:
+        month_index = data['date__month'] - 1
+        passengers_per_month[month_index] = data['total_passengers_in']
+
+    # Trim data for months that haven't occurred yet
+    passengers_per_month = passengers_per_month[:current_month]
+
+    # Render the monthly data to the template
+    return render(
+        request,
+        'chart.html',
+        {
+            'months': months[:current_month],
+            'passengers_per_month': passengers_per_month,
+            'current_year': current_year,
+        }
+    )
+@login_required
+def last_7_days_data_view_green(request):
     if not request.user.is_superuser:
         return HttpResponseForbidden("You do not have permission to view this page.")
     
@@ -116,7 +248,7 @@ def last_7_days_data_view(request):
     last_7_days_start = date.today() - timedelta(days=7)
 
     # Fetch and aggregate data for the last 7 days
-    last_7_days_data = BlueShuttle.objects.filter(date__gte=last_7_days_start).values('stop_name').annotate(
+    last_7_days_data = GreenShuttle.objects.filter(date__gte=last_7_days_start).values('stop_name').annotate(
         total_passengers_in=Sum('number_of_passangers_in')
     )
 
@@ -138,9 +270,8 @@ def last_7_days_data_view(request):
     )
 
 
-# Function to handle filtered shuttle data based on custom filters
 @login_required
-def filtered_shuttle_data_view(request):
+def filtered_shuttle_data_view_green(request):
     if not request.user.is_superuser:
         return HttpResponseForbidden("You do not have permission to view this page.")
     
@@ -175,7 +306,7 @@ def filtered_shuttle_data_view(request):
             pass  # Handle invalid date formats if needed
 
     # Query BlueShuttle model with the filter conditions
-    stop_data = BlueShuttle.objects.filter(**filter_conditions).values('date', 'stop_name').annotate(
+    stop_data = GreenShuttle.objects.filter(**filter_conditions).values('date', 'stop_name').annotate(
         total_passengers_in=Sum('number_of_passangers_in')
     )
 
@@ -204,168 +335,5 @@ def filtered_shuttle_data_view(request):
             'custom_end_date': custom_end_date,
         }
     )
-
-
-# Function to get monthly shuttle data for the current year
-@login_required
-def shuttle_data(request):
-    if not request.user.is_superuser:
-        return HttpResponseForbidden("You do not have permission to view this page.")
-    
-    # Get the current year and month
-    current_year = date.today().year
-    current_month = date.today().month
-
-    # Aggregate monthly data for the current year
-    monthly_data = BlueShuttle.objects.filter(date__year=current_year).values('date__month').annotate(
-        total_passengers_in=Sum('number_of_passangers_in')
-    ).order_by('date__month')
-
-    # Prepare the months and corresponding passenger data
-    months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
-    passengers_per_month = [0] * 12
-
-    # Populate data for the months that have entries
-    for data in monthly_data:
-        month_index = data['date__month'] - 1
-        passengers_per_month[month_index] = data['total_passengers_in']
-
-    # Trim data for months that haven't occurred yet
-    passengers_per_month = passengers_per_month[:current_month]
-
-    # Render the monthly data to the template
-    return render(
-        request,
-        'chart.html',
-        {
-            'months': months[:current_month],
-            'passengers_per_month': passengers_per_month,
-            'current_year': current_year,
-        }
-    )
-
-
-# Function to get demands by stop
-@login_required
-def demands_by_stop(request):
-    if not request.user.is_superuser:
-        return HttpResponseForbidden("You do not have permission to view this page.")
-    
-    # Aggregate boarding and alighting data by stop
-    stop_data = BlueShuttle.objects.values('stop_name').annotate(
-        total_boarding=Sum('number_of_passangers_in'),
-        total_alighting=Sum('number_of_passangers_out')
-    ).order_by('stop_name')
-
-    # Prepare data for visualization
-    stops = [data['stop_name'] for data in stop_data]
-    boarding_counts = [data['total_boarding'] for data in stop_data]
-    alighting_counts = [data['total_alighting'] for data in stop_data]
-
-    # Render the demands by stop data to the template
-    return stops, boarding_counts, alighting_counts
-@login_required
-def index(request):
-
-    # Check if the user is a superuser before proceeding
-    if not request.user.is_superuser:
-        return HttpResponseForbidden("You do not have permission to view this page.")
-
-    # Get the current year
-    current_year = date.today().year
-
-    # Call the demands_by_stop function to get the required data
-    stops, boarding_counts, alighting_counts = demands_by_stop(request)
-    
-    # List of stop names in the correct order
-    stop_order = [
-        "Towers", "Grauel", "UC/Kent/Academic", "Vandiver/Merick", "Rear Kent", "Pacific/Grauel", 
-        "Catapult", "Mass Media", "Spanish/Independence", "River Campus", "Band Annex", 
-        "River Campus Arts Building", "Vandiver/Merick", "Bookstore", "Memorial/Parker/Academic", 
-        "Scully/Parker", "Dempster", "Polytech/Laferla", "MMTF", "International Village"
-    ]
-    
-    # Aggregate the total number of passengers by stop for the current year
-    stop_data = BlueShuttle.objects.filter(date__year=current_year) \
-        .values('stop_name') \
-        .annotate(
-            total_passengers_in=Sum('number_of_passangers_in'),
-            total_passengers_out=Sum('number_of_passangers_out')
-        ) \
-        .order_by('stop_name')
-
-    # Create dictionaries for easy lookup
-    stop_dict = {data['stop_name']: data for data in stop_data}
-
-    # Prepare arrays to hold stop names and corresponding data
-    stop_names = []
-    passengers_in = []
-    passengers_out = []
-
-    # Ensure stops are added in the correct order
-    for stop in stop_order:
-        if stop in stop_dict:
-            stop_names.append(stop)
-            passengers_in.append(stop_dict[stop]['total_passengers_in'] or 0)
-            passengers_out.append(stop_dict[stop]['total_passengers_out'] or 0)
-
-    # Prepare the context to pass to the template
-    context = {
-        'stop_names': stop_names,
-        'passengers_in': passengers_in,
-        'passengers_out': passengers_out,
-        'current_year': current_year,
-        'stops': stops,
-        'boarding_counts': boarding_counts,
-        'alighting_counts': alighting_counts
-    }
-
-    return render(request, 'index.html', context)
-
-
-
-def calculate_and_plot_average_time(request):
-    # Query all "Tower" stop entries ordered by time and date
-    tower_stops = BlueShuttle.objects.filter(stop_name="Towers").order_by('date', 'time')
-
-    # pdb.set_trace()
-
-    # Initialize a list to store round trip durations (in seconds)
-    # round_durations = []
-    # round_numbers = []
-
-    # # Iterate through the tower_stops list in pairs
-    # for i in range(0, len(tower_stops)-1, 2):  # Step 2 to get pairs (0 & 1, 2 & 3, ...)
-    #     start_time = datetime.combine(tower_stops[i].date, tower_stops[i].time)
-    #     end_time = datetime.combine(tower_stops[i+1].date, tower_stops[i+1].time)
-        
-    #     # Calculate the round trip duration in seconds
-    #     duration = (end_time - start_time).total_seconds()
-        
-    #     # Append the calculated duration
-    #     round_durations.append(duration)
-        
-    #     # Append the round number (e.g., 1, 2, 3,...)
-    #     round_numbers.append(i // 2 + 1)
-
-    # # Calculate the average round trip time
-    # average_time = sum(round_durations) / len(round_durations) if round_durations else 0
-
-    # # Convert average time to a human-readable format (HH:MM:SS)
-    # average_time_formatted = str(timedelta(seconds=average_time))
-
-    # # Prepare data for plotting
-    # timestamps = [datetime.combine(tower_stops[i].date, tower_stops[i].time).strftime('%Y-%m-%d %H:%M:%S') for i in range(0, len(tower_stops)-1, 2)]
-    
-    # # Pass data to the HTML template for rendering
-    context = {
-        # 'round_durations': round_durations,
-        # 'timestamps': timestamps,
-        # 'round_numbers': round_numbers,
-        'tower_stops': tower_stops,
-        # 'average_time': average_time_formatted,
-    }
-    
-    return render(request, 'shuttle_rounds.html', context)
 
 
